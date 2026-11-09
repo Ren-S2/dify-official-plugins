@@ -120,7 +120,7 @@ def list_files(ctx: GoogleContext, query: str, limit: int, order_by: str | None 
         if not body.get("nextPageToken"):
             break
         params["pageToken"] = body["nextPageToken"]
-    return ({"items": files, "count": len(files)}, {"folder_id": folder, "files": files}, ...)
+    return [file_dict(f) for f in files[:limit]]
 
 
 def _limit(p: Mapping[str, Any], default: int, maximum: int) -> int:
@@ -159,7 +159,7 @@ def search(ctx: GoogleContext, p: Mapping[str, Any]) -> Result:
             raise GoogleAuthError("Give a name, text, file_type, folder_id or a raw query.")
         query = " and ".join(parts)
     files = list_files(ctx, query, _limit(p, 25, 500), "modifiedTime desc" if "fullText" not in query else None)
-     return ({"items": files, "count": len(files)}, {"query": query, "files": files},
+    return ({"items": files, "count": len(files)}, {"query": query, "files": files},
             f"Found {len(files)} file(s):\n{_listing(files)}" if files else f"Nothing matches: {query}")
 
 def list_folder(ctx: GoogleContext, p: Mapping[str, Any]) -> Result:
